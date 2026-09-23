@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>오늘 뭐 먹지? - 16강 이상형 월드컵 & 지도 검색</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --dark-color: #2d3436;
+            --light-color: #f7f9fa;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body { 
+            background-color: var(--light-color); 
+            color: var(--dark-color); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 16px 12px; 
+        }
+
+        header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            margin-top: 10px;
+        }
+
+        header h1 { 
+            color: var(--primary-color); 
+            font-size: 1.75rem; 
+            margin-bottom: 4px; 
+        }
+
+        header p {
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 480px; 
+            background: white; 
+            border-radius: 20px; 
+            padding: 20px 16px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
+        }
+
+        .card { margin-bottom: 24px; }
+        .card-title { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            margin-bottom: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        .btn { 
+            width: 100%; 
+            padding: 14px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: background-color 0.2s, transform 0.1s; 
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; margin-top: 8px; }
+
+        /* 월드컵 UI */
+        .worldcup-box { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: center; 
+            align-items: center;
+            margin-top: 8px; 
+        }
+
+        .food-card { 
+            flex: 1; 
+            border: 2px solid #f1f2f6; 
+            border-radius: 14px; 
+            overflow: hidden; 
+            cursor: pointer; 
+            text-align: center; 
+            background: #fff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+
+        .food-card img { 
+            width: 100%; 
+            height: 130px; 
+            object-fit: cover; 
+            display: block;
+        }
+
+        .food-card .name { 
+            padding: 10px 4px; 
+            font-weight: bold; 
+            font-size: 0.95rem; 
+        }
+
+        .winner-image-box {
+            width: 100%;
+            max-width: 240px;
+            height: 160px;
+            margin: 12px auto;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+        }
+        .winner-image-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* 카테고리 탭 스타일 */
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+
+        .cat-tab {
+            padding: 8px 14px;
+            border-radius: 20px;
+            background: #f1f2f6;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            color: #636e72;
+        }
+        .cat-tab.active {
+            background: var(--dark-color);
+            color: white;
+        }
+
+        .sub-food-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .food-item-btn {
+            padding: 10px 6px;
+            border: 1px solid #dfe6e9;
+            border-radius: 10px;
+            background: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            color: var(--dark-color);
+        }
+        .food-item-btn.selected {
+            border-color: var(--primary-color);
+            background: #fff5f5;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .map-selector {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .map-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #dfe6e9;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+        .map-btn.selected {
+            background: #eccc68;
+            color: #2d3436;
+            border-color: #ffa502;
+        }
+
+        .fav-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .fav-tag { background: #ffeaa7; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🍽️ 오늘 뭐 먹지?</h1>
+        <p>16강 월드컵 & 맞춤 지도 검색</p>
+    </header>
+
+    <div class="container">
+        <!-- 1. 이상형 월드컵 섹션 -->
+        <div class="card">
+            <div class="card-title">
+                🏆 음식 이상형 월드컵
+                <span id="roundTitle" style="font-size: 0.9rem; color: var(--primary-color); font-weight: bold;">16강</span>
+            </div>
+
+            <div id="worldcupGame" class="worldcup-box">
+                <div class="food-card" onclick="selectFood(0)">
+                    <img id="img0" src="" alt="메뉴 1">
+                    <div id="name0" class="name">-</div>
+                </div>
+                <div style="font-weight: 800; color: #dcdde1; font-size: 0.9rem;">VS</div>
+                <div class="food-card" onclick="selectFood(1)">
+                    <img id="img1" src="" alt="메뉴 2">
+                    <div id="name1" class="name">-</div>
+                </div>
+            </div>
+
+            <div id="worldcupResult" class="hidden" style="text-align: center; padding: 16px; background: #fff5f5; border-radius: 16px;">
+                <h3 style="color: var(--primary-color); margin-bottom: 4px; font-size: 1.1rem;">🎉 오늘의 추천 메뉴!</h3>
+                <h2 id="winnnerName" style="font-size: 1.5rem; color: #2d3436; margin-bottom: 8px;">-</h2>
+                
+                <div class="winner-image-box">
+                    <img id="winnerImg" src="" alt="우승 음식 이미지">
+                </div>
+
+                <button class="btn btn-primary" onclick="addFavoriteWinner()">❤️ 내 즐겨찾기에 추가</button>
+                <button class="btn btn-secondary" onclick="searchMapWithWinner()">📍 이 메뉴 근처 식당 찾기</button>
+                <button class="btn" style="background:#dfe6e9; color:#2d3436; margin-top:8px;" onclick="resetWorldcup()">🔄 다시 하기</button>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <!-- 2. 카테고리별 음식 지정 및 지도 선택 검색 섹션 -->
+        <div class="card">
+            <div class="card-title">📍 카테고리별 맛집 찾아보기</div>
+            
+            <div class="category-tabs">
+                <button class="cat-tab active" onclick="filterCategory('전체', this)">전체</button>
+                <button class="cat-tab" onclick="filterCategory('한식', this)">한식</button>
+                <button class="cat-tab" onclick="filterCategory('중식', this)">중식</button>
+                <button class="cat-tab" onclick="filterCategory('일식', this)">일식</button>
+                <button class="cat-tab" onclick="filterCategory('양식', this)">양식</button>
+                <button class="cat-tab" onclick="filterCategory('분식', this)">분식</button>
+                <button class="cat-tab" onclick="filterCategory('패스트푸드', this)">패스트푸드</button>
+                <button class="cat-tab" onclick="filterCategory('야식', this)">야식</button>
+            </div>
+
+            <div id="subFoodGrid" class="sub-food-grid"></div>
+
+            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #636e72;">🗺️ 검색할 지도 선택</div>
+            <div class="map-selector">
+                <button class="map-btn selected" onclick="selectMapProvider('kakao', this)">카카오맵</button>
+                <button class="map-btn" onclick="selectMapProvider('naver', this)">네이버지도</button>
+                <button class="map-btn" onclick="selectMapProvider('google', this)">구글지도</button>
+            </div>
+
+            <button class="btn btn-secondary" onclick="searchNearbySelected()">선택한 음식으로 근처 검색하기</button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <!-- 3. 즐겨찾기 목록 -->
+        <div class="card" style="margin-bottom:0;">
+            <div class="card-title">⭐ 내가 좋아하는 메뉴</div>
+            <div id="favList" class="fav-list">
+                <span style="color: #aaa; font-size: 0.85rem;">즐겨찾기 항목이 없습니다.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "/api"; // 배포 및 로컬 범용 상대 경로
+        let foodList = [];
+        let currentRound = [];
+        let nextRound = [];
+        let matchIndex = 0;
+        let winnerFood = null;
+
+        let selectedFoodName = "";
+        let selectedMapProvider = "kakao";
+
+        async function init() {
+            try {
+                const res = await fetch(`${API_BASE}/foods`);
+                const result = await res.json();
+                if (result.success) {
+                    foodList = result.data;
+                    resetWorldcup();
+                    renderCategoryFoods("전체");
+                }
+                loadFavorites();
+            } catch (err) {
+                console.error("백엔드 서버 연결 실패", err);
+            }
+        }
+
+        function filterCategory(category, element) {
+            document.querySelectorAll('.cat-tab').forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+            renderCategoryFoods(category);
+        }
+
+        function renderCategoryFoods(category) {
+            const grid = document.getElementById('subFoodGrid');
+            const filtered = category === "전체" ? foodList : foodList.filter(f => f.category === category);
+
+            grid.innerHTML = filtered.map(item => `
+                <button class="food-item-btn ${selectedFoodName === item.name ? 'selected' : ''}" 
+                        onclick="selectSubFood('${item.name}', this)">
+                    ${item.name}
+                </button>
+            `).join('');
+        }
+
+        function selectSubFood(name, element) {
+            document.querySelectorAll('.food-item-btn').forEach(btn => btn.classList.remove('selected'));
+            if (selectedFoodName === name) {
+                selectedFoodName = "";
+            } else {
+                selectedFoodName = name;
+                element.classList.add('selected');
+            }
+        }
+
+        function selectMapProvider(provider, element) {
+            selectedMapProvider = provider;
+            document.querySelectorAll('.map-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function searchNearbySelected() {
+            if (!selectedFoodName) {
+                alert("검색할 음식을 선택해 주세요!");
+                return;
+            }
+            openMapWithQuery(selectedFoodName + " 맛집");
+        }
+
+        function searchMapWithWinner() {
+            if (!winnerFood) return;
+            openMapWithQuery(winnerFood.name + " 맛집");
+        }
+
+        function openMapWithQuery(query) {
+            const encodedQuery = encodeURIComponent(query);
+            let url = "";
+
+            if (selectedMapProvider === 'kakao') {
+                url = `https://m.map.kakao.com/actions/searchView?q=${encodedQuery}`;
+            } else if (selectedMapProvider === 'naver') {
+                url = `https://m.map.naver.com/search2/search.naver?query=${encodedQuery}`;
+            } else if (selectedMapProvider === 'google') {
+                url = `https://www.google.com/maps/search/${encodedQuery}`;
+            }
+
+            window.open(url, '_blank');
+        }
+
+        function resetWorldcup() {
+            currentRound = [...foodList].sort(() => Math.random() - 0.5);
+            nextRound = [];
+            matchIndex = 0;
+            document.getElementById('worldcupGame').classList.remove('hidden');
+            document.getElementById('worldcupResult').classList.add('hidden');
+            updateMatch();
+        }
+
+        function updateMatch() {
+            const totalInRound = currentRound.length;
+            const roundName = totalInRound === 2 ? "결승전" : `${totalInRound}강 (${(matchIndex/2) + 1}/${totalInRound/2})`;
+            document.getElementById('roundTitle').innerText = roundName;
+
+            const food1 = currentRound[matchIndex];
+            const food2 = currentRound[matchIndex + 1];
+
+            document.getElementById('img0').src = food1.img;
+            document.getElementById('name0').innerText = food1.name;
+            document.getElementById('img1').src = food2.img;
+            document.getElementById('name1').innerText = food2.name;
+        }
+
+        function selectFood(selectedIndex) {
+            const selected = currentRound[matchIndex + selectedIndex];
+            nextRound.push(selected);
+            matchIndex += 2;
+
+            if (matchIndex >= currentRound.length) {
+                if (nextRound.length === 1) {
+                    showWinner(nextRound[0]);
+                } else {
+                    currentRound = [...nextRound];
+                    nextRound = [];
+                    matchIndex = 0;
+                    updateMatch();
+                }
+            } else {
+                updateMatch();
+            }
+        }
+
+        async function showWinner(winner) {
+            winnerFood = winner;
+            document.getElementById('worldcupGame').classList.add('hidden');
+            document.getElementById('worldcupResult').classList.remove('hidden');
+            document.getElementById('roundTitle').innerText = "우승!";
+            
+            document.getElementById('winnnerName').innerText = winner.name;
+            document.getElementById('winnerImg').src = winner.img;
+
+            await fetch(`${API_BASE}/worldcup/winner`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ winnerName: winner.name })
+            });
+        }
+
+        async function addFavoriteWinner() {
+            if (!winnerFood) return;
+            const res = await fetch(`${API_BASE}/favorites`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ foodName: winnerFood.name })
+            });
+            const result = await res.json();
+            if (result.success) {
+                renderFavorites(result.data);
+                alert(`'${winnerFood.name}'이(가) 즐겨찾기에 등록되었습니다!`);
+            }
+        }
+
+        async function loadFavorites() {
+            try {
+                const res = await fetch(`${API_BASE}/favorites`);
+                const result = await res.json();
+                if (result.success) renderFavorites(result.data);
+            } catch (e) {
+                console.log("즐겨찾기 로드 실패");
+            }
+        }
+
+        function renderFavorites(favs) {
+            const container = document.getElementById('favList');
+            if (favs.length === 0) {
+                container.innerHTML = `<span style="color: #aaa; font-size: 0.85rem;">즐겨찾기 항목이 없습니다.</span>`;
+                return;
+            }
+            container.innerHTML = favs.map(f => `<div class="fav-tag">❤️ ${f}</div>`).join('');
+        }
+
+        init();
+    </script>
+</body>
+</html>
