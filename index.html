@@ -1,1 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘 뭐 먹지? - 음식 월드컵 & 맛집 지도</title>
+    
+    <!-- 브라우저 탭 아이콘 (파비콘) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍱</text></svg>">
 
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px 10px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 24px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .worldcup-card {
+            background: #fff;
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .match-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .menu-card {
+            flex: 1;
+            background: #fdfdfd;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .menu-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .menu-emoji {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .menu-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .vs-badge {
+            font-weight: 900;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .winner-box {
+            text-align: center;
+            padding: 20px 10px;
+            background: #fff5f5;
+            border-radius: 12px;
+            border: 2px dashed var(--primary-color);
+        }
+
+        .category-group {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+        }
+
+        .category-group::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-btn {
+            border: 1px solid #eee;
+            background: #f0f2f5;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            color: #555;
+            transition: 0.2s;
+        }
+
+        .cat-btn.active {
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: bold;
+            border-color: var(--primary-color);
+        }
+
+        .food-chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .food-chip {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .food-chip:hover {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .food-chip.selected {
+            background: var(--secondary-color);
+            color: #ffffff;
+            border-color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        .selected-target-box {
+            background: #eef9f8;
+            border: 1px solid var(--secondary-color);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c7a7b;
+            margin-bottom: 16px;
+        }
+
+        .map-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .map-btn {
+            flex: 1;
+            padding: 12px 4px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            color: #444;
+        }
+
+        .map-btn.selected {
+            background: #f6e05e;
+            border-color: #ecc94b;
+            color: #222;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 24px;
+            transition: 0.2s;
+        }
+
+        .search-btn:hover {
+            opacity: 0.9;
+        }
+
+        .fav-list {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .fav-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .fav-empty {
+            font-size: 14px;
+            color: #aaa;
+            text-align: center;
+            padding: 16px 0;
+        }
+
+        .fav-del-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🍽️ 오늘 뭐 먹지?</h1>
+        <p>16강 월드컵 & 맞춤 지도 검색</p>
+    </header>
+
+    <!-- 1. 이상형 월드컵 -->
+    <section class="worldcup-card">
+        <div class="section-title">
+            <span>🏆 음식 이상형 월드컵</span>
+            <span id="round-info" style="color: var(--primary-color); font-size: 14px;">16강</span>
+        </div>
+
+        <div id="worldcup-body">
+            <!-- 동적 렌더링 -->
+        </div>
+    </section>
+
+    <!-- 2. 카테고리 선택 및 세부 음식 목록 -->
+    <section>
+        <div class="section-title">📌 카테고리별 맛집 찾아보기</div>
+        <div class="category-group">
+            <button class="cat-btn active" onclick="selectCategory('한식', this)">한식</button>
+            <button class="cat-btn" onclick="selectCategory('중식', this)">중식</button>
+            <button class="cat-btn" onclick="selectCategory('일식', this)">일식</button>
+            <button class="cat-btn" onclick="selectCategory('양식', this)">양식</button>
+            <button class="cat-btn" onclick="selectCategory('분식', this)">분식</button>
+            <button class="cat-btn" onclick="selectCategory('패스트푸드', this)">패스트푸드</button>
+        </div>
+
+        <div class="food-chip-group" id="food-chip-container"></div>
+    </section>
+
+    <!-- 현재 선택된 검색 대상 안내 -->
+    <div class="selected-target-box">
+        📍 선택한 검색어: <span id="current-search-term">김치찌개</span>
+    </div>
+
+    <!-- 3. 지도 선택 & 근처 검색 -->
+    <section>
+        <div class="section-title" style="font-size: 14px; color: #666;">🗺️ 검색할 지도 선택</div>
+        <div class="map-selector">
+            <div class="map-btn selected" id="map-kakao" onclick="selectMap('kakao')">카카오맵</div>
+            <div class="map-btn" id="map-naver" onclick="selectMap('naver')">네이버지도</div>
+            <div class="map-btn" id="map-google" onclick="selectMap('google')">구글지도</div>
+        </div>
+
+        <button class="search-btn" onclick="searchNearby()">선택한 음식으로 근처 검색하기</button>
+    </section>
+
+    <!-- 4. 즐겨찾기 목록 -->
+    <section>
+        <div class="section-title">⭐ 내가 좋아하는 메뉴</div>
+        <ul class="fav-list" id="fav-list">
+            <div class="fav-empty">즐겨찾기 항목이 없습니다.</div>
+        </ul>
+    </section>
+</div>
+
+<script>
+    const categoryFoods = {
+        "한식": [
+            { name: "김치찌개", emoji: "🥘" },
+            { name: "삼겹살", emoji: "🥓" },
+            { name: "비빔밥", emoji: "🥗" },
+            { name: "족발", emoji: "🍖" },
+            { name: "국밥", emoji: "🍲" },
+            { name: "제육볶음", emoji: "🥩" }
+        ],
+        "중식": [
+            { name: "짜장면", emoji: "🍜" },
+            { name: "짬뽕", emoji: "🥢" },
+            { name: "마라탕", emoji: "🌶️" },
+            { name: "탕수육", emoji: "🥠" },
+            { name: "양꼬치", emoji: "🍢" }
+        ],
+        "일식": [
+            { name: "초밥", emoji: "🍣" },
+            { name: "돈카츠", emoji: "🍱" },
+            { name: "라멘", emoji: "🍥" },
+            { name: "우동", emoji: "🥣" },
+            { name: "덮밥", emoji: "🍚" }
+        ],
+        "양식": [
+            { name: "파스타", emoji: "🍝" },
+            { name: "스테이크", emoji: "🍽️" },
+            { name: "리조또", emoji: "🥘" },
+            { name: "샐러드", emoji: "🥗" }
+        ],
+        "분식": [
+            { name: "떡볶이", emoji: "🍢" },
+            { name: "순대", emoji: "🍳" },
+            { name: "튀김", emoji: "🍤" },
+            { name: "김밥", emoji: "🍙" }
+        ],
+        "패스트푸드": [
+            { name: "햄버거", emoji: "🍔" },
+            { name: "피자", emoji: "🍕" },
+            { name: "치킨", emoji: "🍗" },
+            { name: "샌드위치", emoji: "🥪" }
+        ]
+    };
+
+    const worldcupCandidatePool = [
+        { name: "김치찌개", emoji: "🥘" },
+        { name: "삼겹살", emoji: "🥓" },
+        { name: "비빔밥", emoji: "🥗" },
+        { name: "족발", emoji: "🍖" },
+        { name: "짜장면", emoji: "🍜" },
+        { name: "마라탕", emoji: "🌶️" },
+        { name: "탕수육", emoji: "🥠" },
+        { name: "초밥", emoji: "🍣" },
+        { name: "돈카츠", emoji: "🍱" },
+        { name: "라멘", emoji: "🍥" },
+        { name: "파스타", emoji: "🍝" },
+        { name: "스테이크", emoji: "🍽️" },
+        { name: "떡볶이", emoji: "🍢" },
+        { name: "햄버거", emoji: "🍔" },
+        { name: "피자", emoji: "🍕" },
+        { name: "치킨", emoji: "🍗" }
+    ];
+
+    let currentList = [];
+    let nextRoundList = [];
+    let currentMatchIndex = 0;
+    
+    let activeSearchQuery = "김치찌개"; 
+    let selectedMapApp = "kakao";
+    let favorites = JSON.parse(localStorage.getItem('fav_food')) || [];
+
+    function initTournament() {
+        currentList = shuffle([...worldcupCandidatePool]);
+        nextRoundList = [];
+        currentMatchIndex = 0;
+        renderMatch();
+    }
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function updateRoundTitle() {
+        const roundElem = document.getElementById('round-info');
+        const totalMatches = currentList.length / 2;
+        const currentMatchNumber = (currentMatchIndex / 2) + 1;
+
+        if (currentList.length === 2) {
+            roundElem.textContent = "결승전";
+        } else {
+            roundElem.textContent = `${currentList.length}강 (${currentMatchNumber}/${totalMatches})`;
+        }
+    }
+
+    function renderMatch() {
+        const body = document.getElementById('worldcup-body');
+
+        if (currentList.length === 1) {
+            showWinner(currentList[0]);
+            return;
+        }
+
+        updateRoundTitle();
+
+        const menu1 = currentList[currentMatchIndex];
+        const menu2 = currentList[currentMatchIndex + 1];
+
+        body.innerHTML = `
+            <div class="match-container">
+                <div class="menu-card" onclick="selectMenu(0)">
+                    <div class="menu-emoji">${menu1.emoji}</div>
+                    <div class="menu-name">${menu1.name}</div>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="menu-card" onclick="selectMenu(1)">
+                    <div class="menu-emoji">${menu2.emoji}</div>
+                    <div class="menu-name">${menu2.name}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function selectMenu(index) {
+        const winner = currentList[currentMatchIndex + index];
+        nextRoundList.push(winner);
+        currentMatchIndex += 2;
+
+        if (currentMatchIndex >= currentList.length) {
+            currentList = [...nextRoundList];
+            nextRoundList = [];
+            currentMatchIndex = 0;
+        }
+
+        renderMatch();
+    }
+
+    function showWinner(winner) {
+        setSearchTarget(winner.name);
+        
+        const body = document.getElementById('worldcup-body');
+        document.getElementById('round-info').textContent = "최종 우승!";
+
+        body.innerHTML = `
+            <div class="winner-box">
+                <div style="font-size: 60px; margin-bottom: 8px;">${winner.emoji}</div>
+                <h3 style="font-size: 20px; color: #ff6b6b; margin-bottom: 8px;">오늘의 추천: ${winner.name}!</h3>
+                <button onclick="addFavorite('${winner.name}', '${winner.emoji}')" style="background:#ff6b6b; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px;">⭐ 즐겨찾기 추가</button>
+                <button onclick="initTournament()" style="background:#eee; color:#333; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; margin-left:4px;">다시하기</button>
+            </div>
+        `;
+    }
+
+    function selectCategory(categoryName, btn) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        renderFoodChips(categoryName);
+    }
+
+    function renderFoodChips(categoryName) {
+        const container = document.getElementById('food-chip-container');
+        const foods = categoryFoods[categoryName] || [];
+
+        container.innerHTML = foods.map((f, index) => `
+            <div class="food-chip ${index === 0 ? 'selected' : ''}" onclick="clickFoodChip('${f.name}', this)">
+                <span>${f.emoji}</span>
+                <span>${f.name}</span>
+            </div>
+        `).join('');
+
+        if(foods.length > 0) {
+            setSearchTarget(foods[0].name);
+        }
+    }
+
+    function clickFoodChip(foodName, element) {
+        document.querySelectorAll('.food-chip').forEach(c => c.classList.remove('selected'));
+        element.classList.add('selected');
+
+        setSearchTarget(foodName);
+    }
+
+    function setSearchTarget(query) {
+        activeSearchQuery = query;
+        document.getElementById('current-search-term').textContent = query;
+    }
+
+    function selectMap(type) {
+        selectedMapApp = type;
+        document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('selected'));
+        document.getElementById('map-' + type).classList.add('selected');
+    }
+
+    function searchNearby() {
+        if (!activeSearchQuery) {
+            alert('검색할 음식을 선택해 주세요.');
+            return;
+        }
+
+        const query = encodeURIComponent("근처 " + activeSearchQuery);
+        let url = "";
+
+        if (selectedMapApp === 'kakao') {
+            url = `https://map.kakao.com/link/search/${query}`;
+        } else if (selectedMapApp === 'naver') {
+            url = `https://map.naver.com/v5/search/${query}`;
+        } else if (selectedMapApp === 'google') {
+            url = `https://www.google.com/maps/search/${query}`;
+        }
+
+        window.open(url, '_blank');
+    }
+
+    function addFavorite(name, emoji) {
+        if (!favorites.some(f => f.name === name)) {
+            favorites.push({ name, emoji });
+            localStorage.setItem('fav_food', JSON.stringify(favorites));
+            renderFavorites();
+        } else {
+            alert('이미 즐겨찾기에 있습니다.');
+        }
+    }
+
+    function removeFavorite(name) {
+        favorites = favorites.filter(f => f.name !== name);
+        localStorage.setItem('fav_food', JSON.stringify(favorites));
+        renderFavorites();
+    }
+
+    function renderFavorites() {
+        const listElem = document.getElementById('fav-list');
+        if (favorites.length === 0) {
+            listElem.innerHTML = `<div class="fav-empty">즐겨찾기 항목이 없습니다.</div>`;
+            return;
+        }
+
+        listElem.innerHTML = favorites.map(f => `
+            <li class="fav-item">
+                <span>${f.emoji} <strong>${f.name}</strong></span>
+                <div>
+                    <button onclick="setSearchTarget('${f.name}')" style="background:#4ecdc4; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px; margin-right:4px;">선택</button>
+                    <button class="fav-del-btn" onclick="removeFavorite('${f.name}')">삭제</button>
+                </div>
+            </li>
+        `).join('');
+    }
+
+    initTournament();
+    renderFavorites();
+    renderFoodChips('한식');
+</script>
+
+</body>
+</html>
